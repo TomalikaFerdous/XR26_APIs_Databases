@@ -78,3 +78,37 @@ namespace WeatherApp.Services
         }
     }
 }
+
+using UnityEngine;
+using UnityEngine.Networking;
+using System.Threading.Tasks;
+using Newtonsoft.Json;
+using WeatherApp.Data;
+
+public class WeatherApiClient : MonoBehaviour
+{
+    [SerializeField] private string apiKey = "7796a05f3a9e798b75bdf18431e6b71d";
+    [SerializeField] private string baseUrl = "http://api.openweathermap.org/data/2.5/weather";
+
+    public async Task<WeatherData> GetWeatherDataAsync(string city)
+    {
+        string url = $"{baseUrl}?q={city}&appid={apiKey}&units=metric";
+
+        using (UnityWebRequest request = UnityWebRequest.Get(url))
+        {
+            var operation = request.SendWebRequest();
+
+            while (!operation.isDone)
+                await Task.Yield();
+
+            if (request.result == UnityWebRequest.Result.Success)
+            {
+                string json = request.downloadHandler.text;
+                return JsonConvert.DeserializeObject<WeatherData>(json);
+            }
+
+            Debug.LogError($"Request failed: {request.error}");
+            return null;
+        }
+    }
+}
